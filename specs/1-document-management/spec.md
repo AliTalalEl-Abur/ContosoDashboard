@@ -11,7 +11,7 @@
 
 ### User Story 1 - Upload a Document (Priority: P1)
 
-An employee selects one or more files from their computer, provides a title and category,
+An employee selects a single file from their computer, provides a title and category,
 optionally links the document to a project, and submits the upload. The system stores
 the file securely, saves the metadata, and confirms success. This is the core action
 everything else depends on.
@@ -20,15 +20,15 @@ everything else depends on.
 meaningful. This is the entry point for all document-management value.
 
 **Independent Test**: Log in as any employee, navigate to the Documents page, upload a
-PDF under 25 MB with a title and a category. Verify the document appears in "My
+single PDF under 25 MB with a title and a category. Verify the document appears in "My
 Documents" and its metadata matches what was entered.
 
 **Acceptance Scenarios**:
 
-1. **Given** a logged-in Employee with no prior uploads, **When** they select a valid
-   PDF (< 25 MB), enter a title and category, and submit, **Then** the document is listed
-   in "My Documents" with correct title, category, upload date, file size, and their
-   name as uploader.
+1. **Given** a logged-in Employee with no prior uploads, **When** they select a single
+   valid PDF (< 25 MB), enter a title and category, and submit, **Then** the document is
+   listed in "My Documents" with correct title, category, upload date, file size, and
+   their name as uploader.
 2. **Given** a logged-in Employee, **When** they select a file exceeding 25 MB,
    **Then** the system rejects the upload and displays a clear error message before any
    storage occurs.
@@ -97,26 +97,36 @@ Download a document and confirm the correct file is received.
 
 ### User Story 4 - Search for Documents (Priority: P4)
 
-Users can search for documents across their accessible document space using keywords
-that match title, description, tags, uploader name, or associated project. Results
-return within 2 seconds and respect access rules.
+Users can search for documents across **all sections they have access to** ("My
+Documents", "Shared with Me", and project documents) using keywords that match title,
+description, tags, uploader name, or associated project. Every result displays a
+source badge — **"Mine"**, **"Shared"**, or **"Project: [name]"** — so users can
+immediately tell where a document originates. Results return within 2 seconds and
+respect access rules.
 
 **Why this priority**: Search becomes valuable once users accumulate many documents.
 It is important but less urgent than the foundational upload, browse, and project-view
 flows.
 
-**Independent Test**: Log in as an employee, upload two documents with distinct titles
-and tags, then search for a keyword that appears in only one document. Verify only the
-matching document appears in results.
+**Independent Test**: Log in as an employee who has uploaded a document, been shared
+a second document, and is a member of a project with a third document — each with a
+unique keyword in the title. Run a search for each keyword individually. Verify: the
+correct document is returned in each case and each result carries the correct source
+badge ("Mine", "Shared", or "Project: [name]").
 
 **Acceptance Scenarios**:
 
 1. **Given** a search query matching a document title the user uploaded, **When** the
-   user submits the search, **Then** the matching document appears in results within
-   2 seconds.
-2. **Given** a search query matching a document the user does NOT have access to,
+   user submits the search, **Then** the matching document appears in results with a
+   **"Mine"** source badge within 2 seconds.
+2. **Given** a search query matching a document shared with the user, **When** the
+   search runs, **Then** the matching document appears with a **"Shared"** source badge.
+3. **Given** a search query matching a project document the user can access, **When**
+   the search runs, **Then** the matching document appears with a
+   **"Project: [project name]"** source badge.
+4. **Given** a search query matching a document the user does NOT have access to,
    **When** the search runs, **Then** that document does not appear in results.
-3. **Given** a search with no matching documents, **When** submitted, **Then** an empty
+5. **Given** a search with no matching documents, **When** submitted, **Then** an empty
    state message is shown (no errors).
 
 ---
@@ -150,24 +160,33 @@ it no longer appears in any list.
 
 ### User Story 6 - Share Documents and Receive Notifications (Priority: P6)
 
-Document owners can share a document with specific users or teams. Recipients receive
+Document owners can share a document with a specific user **or** with an entire project
+team in one action. A project-team share creates a single `DocumentShare` record
+(`SharedWithUserId = null`, `SharedWithProjectId` set); an individual share creates one
+record with `SharedWithUserId` set and `SharedWithProjectId = null`. Recipients receive
 an in-app notification and can find the shared document in a "Shared with Me" section.
 
 **Why this priority**: Sharing is a collaboration enhancement that builds on the core
 document store. It requires stable upload, browse, and notification infrastructure
 first.
 
-**Independent Test**: Log in as a document owner. Share a document with a specific
-other user. Log in as that user and verify an in-app notification has arrived and the
-document appears under "Shared with Me".
+**Independent Test**: Log in as a document owner. Share a document first with a
+specific user, then share a second document with a whole project team (one action).
+For individual share: log in as that user and verify the notification and "Shared with
+Me" entry. For team share: log in as any project member and verify the same.
 
 **Acceptance Scenarios**:
 
-1. **Given** a document owner, **When** they share a document with a colleague,
-   **Then** the colleague receives an in-app notification linking to the document.
-2. **Given** a recipient of a shared document, **When** they open "Shared with Me",
+1. **Given** a document owner, **When** they share a document with an individual
+   colleague, **Then** that colleague receives an in-app notification and a single
+   `DocumentShare` row is created with `SharedWithUserId` set.
+2. **Given** a document owner, **When** they share a document with a project team,
+   **Then** all current project members see the document in "Shared with Me" and a
+   single `DocumentShare` row is created with `SharedWithProjectId` set and
+   `SharedWithUserId = null`.
+3. **Given** a recipient of a shared document, **When** they open "Shared with Me",
    **Then** the shared document is listed and downloadable.
-3. **Given** a user who has not been explicitly shared a document and is not on the
+4. **Given** a user who has not been explicitly shared a document and is not on the
    owning project, **When** they navigate to the document URL directly, **Then** they
    are denied access.
 
@@ -207,8 +226,9 @@ uploaded document with a link.
   file.
 - A user uploads a file, the upload completes, but the user immediately navigates away:
   the document MUST still be persisted and appear when the user returns.
-- Two users simultaneously upload documents with identical original filenames to the
-  same project: both MUST succeed and produce distinct stored files with unique paths.
+- Two users independently upload documents with identical original filenames to the
+  same project in close succession: both MUST succeed and produce distinct stored files
+  with unique GUID-based paths.
 - A search query contains special characters (quotes, percent signs, angle brackets):
   the system MUST handle these without errors or data leakage.
 - A user attempts to preview a file type not supported for preview (e.g., `.xlsx`):
@@ -220,8 +240,9 @@ uploaded document with a link.
 
 ### Functional Requirements
 
-- **FR-001**: Users MUST be able to upload files of types PDF, DOC, DOCX, XLS, XLSX,
-  PPT, PPTX, TXT, JPG, JPEG, and PNG.
+- **FR-001**: Users MUST be able to upload one file at a time. Supported file types:
+  PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, and PNG. Each upload requires
+  its own title and category before submission.
 - **FR-002**: System MUST reject uploaded files exceeding 25 MB and display a clear
   error message identifying the size limit.
 - **FR-003**: System MUST reject files with unsupported extensions and display the list
@@ -244,20 +265,34 @@ uploaded document with a link.
 - **FR-011**: Project team members MUST be able to view and download all documents
   associated with projects they belong to from the project detail page.
 - **FR-012**: Users MUST be able to search for documents by title, description, tags,
-  uploader name, and associated project; results MUST be returned within 2 seconds.
+  uploader name, and associated project across all accessible sections ("My Documents",
+  "Shared with Me", project documents). Each result MUST display a source badge:
+  **"Mine"** (uploaded by user), **"Shared"** (explicitly shared with user), or
+  **"Project: [name]"** (accessible via project membership). Results MUST be returned
+  within 2 seconds and MUST respect access rules (inaccessible documents never appear).
 - **FR-013**: Document owners MUST be able to edit the title, description, category,
   and tags of their documents.
 - **FR-014**: Document owners MUST be able to replace the file content of a document
-  while preserving its metadata record.
+  while preserving its metadata record. File replacement MUST be recorded as a
+  `DocumentActivity` event. No notifications are sent to other users on replacement;
+  the operation is silent outside of the activity log.
 - **FR-015**: Document owners MUST be able to permanently delete documents they
   uploaded, with a confirmation step before deletion.
 - **FR-016**: Project Managers MUST be able to delete any document associated with
   their projects.
-- **FR-017**: Document owners MUST be able to share documents with specific users or
-  teams; recipients MUST receive an in-app notification.
-- **FR-018**: Shared documents MUST appear in a "Shared with Me" section for recipients.
-- **FR-019**: System MUST log all document-related activities: upload, download,
-  deletion, and share events, accessible to Administrators.
+- **FR-017**: Document owners MUST be able to share a document in one of two modes:
+  (a) **Individual share** — select a specific user; creates one `DocumentShare` row
+  with `SharedWithUserId` set and `SharedWithProjectId = null`.
+  (b) **Team share** — select a project; creates one `DocumentShare` row with
+  `SharedWithProjectId` set and `SharedWithUserId = null`. All current members of that
+  project are considered recipients. Recipients MUST receive an in-app notification.
+- **FR-018**: Shared documents MUST appear in a "Shared with Me" section for all
+  eligible recipients (individual or via project membership).
+- **FR-019**: The system MUST record all document-related activities: upload, download,
+  deletion, and share events. These events MUST be viewable on a dedicated
+  **Document Activity Log** page (`/documents/activity`) accessible only to
+  Administrators. The page MUST support filtering by date range, document, and actor
+  user. No other role may access this page.
 - **FR-020**: The dashboard home page MUST display a "Recent Documents" widget showing
   the logged-in user's 5 most recently uploaded documents.
 - **FR-021**: Dashboard summary cards MUST include a document count for the current user.
@@ -268,8 +303,8 @@ uploaded document with a link.
 
 ### Security and Access Rules *(mandatory)*
 
-| Role              | Upload | View Own | View Project Docs | Edit Own | Delete Own | Delete Any in Project | View Admin Reports |
-|-------------------|--------|----------|-------------------|----------|------------|-----------------------|--------------------|
+| Role              | Upload | View Own | View Project Docs | Edit Own | Delete Own | Delete Any in Project | Activity Log Page |
+|-------------------|--------|----------|-------------------|----------|------------|-----------------------|-------------------|
 | Employee          | ✅     | ✅       | Project members only | ✅    | ✅         | ❌                    | ❌                 |
 | Team Lead         | ✅     | ✅       | Project members only | ✅    | ✅         | ❌ (own project only via PM role) | ❌     |
 | Project Manager   | ✅     | ✅       | All their projects | ✅     | ✅         | ✅ (own projects)     | ❌                 |
@@ -313,9 +348,11 @@ uploaded document with a link.
   integer ID, title, optional description, category (text), original filename, internal
   GUID-based file path, MIME type, file size in bytes, upload timestamp, uploader
   (User foreign key), optional project association (Project foreign key).
-- **DocumentShare**: Represents a sharing relationship. Key attributes: document
-  reference, recipient user or team reference, share timestamp, shared-by user
-  reference.
+- **DocumentShare**: Represents a sharing relationship. One row per share action.
+  Key attributes: integer ID, document reference (FK → Document), `SharedWithUserId`
+  (nullable INT FK → User — set for individual shares), `SharedWithProjectId`
+  (nullable INT FK → Project — set for team shares), share timestamp, shared-by user
+  reference. Exactly one of the two recipient fields is non-null per row.
 - **DocumentActivity**: Represents an audit log entry. Key attributes: document
   reference, action type (upload/download/delete/share), actor user, timestamp.
 
@@ -365,9 +402,28 @@ uploaded document with a link.
      accessible.
   7. Share a document with a colleague. Log in as that colleague and verify the in-app
      notification and the "Shared with Me" section show the document.
+  8. Using the same user from step 7 (who has own docs, a shared doc, and project docs),
+     run a search for a keyword unique to each. Verify each result carries the correct
+     source badge: "Mine", "Shared", or "Project: [name]".
   8. Delete a document as its owner. Confirm it no longer appears in any list and the
      physical file is removed from storage.
   9. Open the dashboard and verify "Recent Documents" shows the last 5 uploads.
+  10. Log in as Administrator. Navigate to `/documents/activity`. Verify upload, download,
+      deletion, and share events from prior steps appear with correct actor, document
+      name, action type, and timestamp. Attempt to access the page as a non-Admin user
+      and verify access is denied (403/redirect).
+
+---
+
+## Clarifications
+
+### Session 2026-03-18
+
+- Q: How does upload work when the user selects multiple files in one session? → A: One file per submission — upload is individual; "one or more files" scope is removed.
+- Q: How does "share with project team" work in `DocumentShare`? → A: Single row with `SharedWithProjectId` set and `SharedWithUserId = null`; membership check at query time (not fan-out).
+- Q: Where is the `DocumentActivity` audit log surfaced in the UI? → A: Dedicated admin-only page at `/documents/activity` with date/document/actor filters; no other role may access it.
+- Q: Should replacing a file (FR-014) trigger notifications to project members or share recipients? → A: No — replacement is silent; the event is recorded in `DocumentActivity` for admin audit only.
+- Q: Does document search operate globally or per-section? → A: Global across all accessible sections ("My Documents", "Shared with Me", project docs); each result shows a source badge ("Mine" / "Shared" / "Project: [name]").
 
 ---
 
@@ -383,4 +439,5 @@ uploaded document with a link.
 - The "Reports" section for Administrators is a simple filtered activity log view, not
   a dedicated reporting engine.
 - File replace (FR-014) updates the physical file and internal path while retaining the
-  same Document record ID and all user-set metadata.
+  same Document record ID and all user-set metadata. The operation is silent (no
+  notifications sent); it is recorded in `DocumentActivity` for audit purposes only.
