@@ -1,0 +1,32 @@
+<div class="input-group">
+    <InputText class="form-control" @bind-Value="searchValue" placeholder="Search by title, description, tags, uploader, or project" />
+    <button type="button" class="btn btn-primary" @onclick="SearchAsync">Search</button>
+    <button type="button" class="btn btn-outline-secondary" @onclick="ClearAsync">Clear</button>
+</div>
+
+@code {
+    [Parameter] public string SearchText { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+    [Parameter] public EventCallback OnSearch { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+
+    private string searchValue = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        searchValue = SearchText;
+    }
+
+    private async Task SearchAsync()
+    {
+        await SearchTextChanged.InvokeAsync(searchValue);
+        await OnSearch.InvokeAsync();
+    }
+
+    private async Task ClearAsync()
+    {
+        searchValue = string.Empty;
+        await SearchTextChanged.InvokeAsync(searchValue);
+        await OnClear.InvokeAsync();
+    }
+}

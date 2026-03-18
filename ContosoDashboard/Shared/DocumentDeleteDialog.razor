@@ -1,0 +1,46 @@
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (Document != null)
+{
+    <div class="card border-danger mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-danger">Delete Document</h5>
+            <button type="button" class="btn-close" @onclick="OnCancelAsync"></button>
+        </div>
+        <div class="card-body">
+            <p>Delete <strong>@Document.Title</strong>? This removes the file from storage and hides it from all lists.</p>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Delete</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="OnCancelAsync">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DocumentListItem? Document { get; set; }
+    [Parameter] public EventCallback OnDeleted { get; set; }
+    [Parameter] public EventCallback OnCancelled { get; set; }
+
+    private async Task DeleteAsync()
+    {
+        if (Document == null)
+        {
+            return;
+        }
+
+        if (!int.TryParse((await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            return;
+        }
+
+        var success = await DocumentService.DeleteDocumentAsync(Document.DocumentId, userId, "Deleted from UI");
+        if (success)
+        {
+            await OnDeleted.InvokeAsync();
+        }
+    }
+
+    private Task OnCancelAsync() => OnCancelled.InvokeAsync();
+}

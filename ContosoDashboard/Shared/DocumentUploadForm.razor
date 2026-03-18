@@ -1,0 +1,150 @@
+@using System.Security.Claims
+@using Microsoft.Extensions.Options
+@inject IDocumentService DocumentService
+@inject IProjectService ProjectService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IOptions<DocumentStorageOptions> StorageOptions
+
+<EditForm Model="this" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">File</label>
+        <InputFile OnChange="HandleFileSelected" class="form-control" />
+        @if (selectedFileName is not null)
+        {
+            <small class="text-muted">Selected: @selectedFileName</small>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Title</label>
+        <InputText class="form-control" @bind-Value="title" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Category</label>
+        <select class="form-select" @bind="category">
+            @foreach (var item in DocumentCategories.All)
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+    </div>
+
+    @if (!FixedProjectId.HasValue)
+    {
+        <div class="mb-3">
+            <label class="form-label">Project</label>
+            <select class="form-select" @bind="selectedProjectId">
+                <option value="">No project</option>
+                @foreach (var project in availableProjects)
+                {
+                    <option value="@project.ProjectId">@project.Name</option>
+                }
+            </select>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputTextArea class="form-control" @bind-Value="description" rows="3" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <InputText class="form-control" @bind-Value="tags" placeholder="Comma-separated tags" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@isBusy">@ButtonLabel</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? FixedProjectId { get; set; }
+    [Parameter] public int? FixedTaskId { get; set; }
+    [Parameter] public string ButtonLabel { get; set; } = "Upload document";
+    [Parameter] public EventCallback UploadCompleted { get; set; }
+
+    private List<Project> availableProjects = new();
+    private IBrowserFile? selectedFile;
+    private string? selectedFileName;
+    private string title = string.Empty;
+    private string category = DocumentCategories.ProjectDocuments;
+    private string? description;
+    private string? tags;
+    private int? selectedProjectId;
+    private string? errorMessage;
+    private bool isBusy;
+    private int currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (int.TryParse(authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            currentUserId = userId;
+            availableProjects = await ProjectService.GetUserProjectsAsync(userId);
+        }
+
+        selectedProjectId = FixedProjectId;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+        selectedFileName = args.File.Name;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        errorMessage = null;
+
+        if (selectedFile == null)
+        {
+            errorMessage = "Please choose a file to upload.";
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            await using var stream = selectedFile.OpenReadStream(StorageOptions.Value.MaxFileSizeBytes);
+            await DocumentService.UploadDocumentAsync(new DocumentUploadRequest
+            {
+                RequestingUserId = currentUserId,
+                Title = title,
+                Description = description,
+                Category = category,
+                Tags = tags,
+                ProjectId = FixedProjectId ?? selectedProjectId,
+                TaskId = FixedTaskId,
+                OriginalFileName = selectedFile.Name,
+                ContentType = selectedFile.ContentType,
+                FileSizeBytes = selectedFile.Size
+            }, stream);
+
+            selectedFile = null;
+            selectedFileName = null;
+            title = string.Empty;
+            description = null;
+            tags = null;
+            category = DocumentCategories.ProjectDocuments;
+            selectedProjectId = FixedProjectId;
+
+            await UploadCompleted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

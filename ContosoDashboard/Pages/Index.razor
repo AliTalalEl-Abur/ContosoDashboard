@@ -20,7 +20,7 @@
     @if (summary != null)
     {
         <div class="row mb-4">
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6 col-lg-3 mb-3">
                 <div class="card summary-card">
                     <div class="card-body">
                         <h5 class="card-title">Active Tasks</h5>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6 col-lg-3 mb-3">
                 <div class="card summary-card">
                     <div class="card-body">
                         <h5 class="card-title">Due Today</h5>
@@ -36,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6 col-lg-2 mb-3">
                 <div class="card summary-card">
                     <div class="card-body">
                         <h5 class="card-title">Active Projects</h5>
@@ -44,7 +44,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6 col-lg-2 mb-3">
+                <div class="card summary-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Documents</h5>
+                        <p class="card-text display-4 text-success">@summary.DocumentCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2 mb-3">
                 <div class="card summary-card">
                     <div class="card-body">
                         <h5 class="card-title">Notifications</h5>
@@ -96,6 +104,27 @@
         </div>
 
         <div class="col-md-6">
+            <h3>Recent Documents</h3>
+            @if (recentDocuments != null && recentDocuments.Any())
+            {
+                <div class="list-group mb-4">
+                    @foreach (var document in recentDocuments)
+                    {
+                        <a class="list-group-item list-group-item-action" href="@document.DownloadUrl">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@document.Title</h6>
+                                <small>@document.UploadedAtUtc.ToLocalTime().ToString("MMM dd")</small>
+                            </div>
+                            <small class="text-muted">@document.Category • @document.OriginalFileName</small>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No recent documents yet.</p>
+            }
+
             <h3>Recent Notifications</h3>
             @if (recentNotifications != null && recentNotifications.Any())
             {
@@ -124,6 +153,7 @@
     private DashboardSummary? summary;
     private List<Announcement>? announcements;
     private List<Notification>? recentNotifications;
+    private List<DocumentListItem>? recentDocuments;
     private string userName = "User";
     private int currentUserId = 0;
 
@@ -146,6 +176,7 @@
             summary = await DashboardService.GetDashboardSummaryAsync(currentUserId);
             announcements = await DashboardService.GetActiveAnnouncementsAsync();
             recentNotifications = await NotificationService.GetUserNotificationsAsync(currentUserId);
+            recentDocuments = await DashboardService.GetRecentDocumentsAsync(currentUserId, 5);
         }
     }
 

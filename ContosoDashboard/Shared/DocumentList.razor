@@ -1,0 +1,95 @@
+@if (Documents == null || !Documents.Any())
+{
+    <p class="text-muted mb-0">@EmptyMessage</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    @if (ShowSource)
+                    {
+                        <th>Source</th>
+                    }
+                    <th>Project</th>
+                    <th>Uploaded</th>
+                    <th>Size</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var document in Documents)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@document.Title</div>
+                            <div class="small text-muted">@document.OriginalFileName</div>
+                            @if (!string.IsNullOrWhiteSpace(document.Tags))
+                            {
+                                <div class="small text-muted">@document.Tags</div>
+                            }
+                        </td>
+                        <td>@document.Category</td>
+                        @if (ShowSource)
+                        {
+                            <td><span class="badge bg-light text-dark border">@document.SourceLabel</span></td>
+                        }
+                        <td>@(document.ProjectName ?? "-")</td>
+                        <td>
+                            <div>@document.UploadedAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</div>
+                            <div class="small text-muted">@document.UploadedByDisplayName</div>
+                        </td>
+                        <td>@FormatFileSize(document.FileSizeBytes)</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary me-1" href="@document.DownloadUrl">Download</a>
+                            @if (OnPreview.HasDelegate)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-success me-1" @onclick="() => OnPreview.InvokeAsync(document.DocumentId)">Preview</button>
+                            }
+                            @if (document.CanEdit)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="() => OnEdit.InvokeAsync(document.DocumentId)">Edit</button>
+                            }
+                            @if (document.CanShare)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-info me-1" @onclick="() => OnShare.InvokeAsync(document.DocumentId)">Share</button>
+                            }
+                            @if (document.CanDelete)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => OnDelete.InvokeAsync(document.DocumentId)">Delete</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<DocumentListItem> Documents { get; set; } = Array.Empty<DocumentListItem>();
+    [Parameter] public bool ShowSource { get; set; }
+    [Parameter] public string EmptyMessage { get; set; } = "No documents available.";
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public EventCallback<int> OnShare { get; set; }
+    [Parameter] public EventCallback<int> OnPreview { get; set; }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return $"{bytes / 1024.0:F1} KB";
+        }
+
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}

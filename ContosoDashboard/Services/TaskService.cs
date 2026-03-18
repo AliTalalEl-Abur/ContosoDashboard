@@ -13,17 +13,21 @@ public interface ITaskService
     Task<bool> UpdateTaskStatusAsync(int taskId, int requestingUserId, Models.TaskStatus status);
     Task<bool> AddTaskCommentAsync(int taskId, int userId, string comment);
     Task<List<TaskComment>> GetTaskCommentsAsync(int taskId, int requestingUserId);
+    Task<List<DocumentListItem>> GetTaskDocumentsAsync(int taskId, int requestingUserId);
+    Task<bool> AttachDocumentToTaskAsync(int taskId, int documentId, int requestingUserId);
 }
 
 public class TaskService : ITaskService
 {
     private readonly ApplicationDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IDocumentService _documentService;
 
-    public TaskService(ApplicationDbContext context, INotificationService notificationService)
+    public TaskService(ApplicationDbContext context, INotificationService notificationService, IDocumentService documentService)
     {
         _context = context;
         _notificationService = notificationService;
+        _documentService = documentService;
     }
 
     public async Task<List<TaskItem>> GetUserTasksAsync(int userId)
@@ -208,5 +212,27 @@ public class TaskService : ITaskService
             .Where(c => c.TaskId == taskId)
             .OrderBy(c => c.CreatedDate)
             .ToListAsync();
+    }
+
+    public async Task<List<DocumentListItem>> GetTaskDocumentsAsync(int taskId, int requestingUserId)
+    {
+        var task = await GetTaskByIdAsync(taskId, requestingUserId);
+        if (task == null)
+        {
+            return new List<DocumentListItem>();
+        }
+
+        return await _documentService.GetTaskDocumentsAsync(taskId, requestingUserId);
+    }
+
+    public async Task<bool> AttachDocumentToTaskAsync(int taskId, int documentId, int requestingUserId)
+    {
+        var task = await GetTaskByIdAsync(taskId, requestingUserId);
+        if (task == null)
+        {
+            return false;
+        }
+
+        return await _documentService.AttachDocumentToTaskAsync(taskId, documentId, requestingUserId);
     }
 }

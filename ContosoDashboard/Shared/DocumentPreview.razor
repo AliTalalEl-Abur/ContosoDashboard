@@ -1,0 +1,43 @@
+@if (Document == null)
+{
+    <p class="text-muted mb-0">Select a document to preview.</p>
+}
+else if (!CanPreview(Document))
+{
+    <div class="alert alert-secondary mb-0">
+        Preview is available for PDF and image files only. Use Download for other formats.
+    </div>
+}
+else
+{
+    <div class="document-preview-wrapper">
+        @if (IsPdf(Document))
+        {
+            <iframe src="@Document.DownloadUrl" title="@Document.Title" class="document-preview-frame"></iframe>
+        }
+        else
+        {
+            <img src="@Document.DownloadUrl" alt="@Document.Title" class="img-fluid rounded border" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public DocumentListItem? Document { get; set; }
+
+    private static bool IsPdf(DocumentListItem item)
+    {
+        return item.MimeType.Contains("pdf", StringComparison.OrdinalIgnoreCase)
+            || item.OriginalFileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsImage(DocumentListItem item)
+    {
+        return item.MimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+            || item.OriginalFileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+            || item.OriginalFileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+            || item.OriginalFileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool CanPreview(DocumentListItem item) => IsPdf(item) || IsImage(item);
+}

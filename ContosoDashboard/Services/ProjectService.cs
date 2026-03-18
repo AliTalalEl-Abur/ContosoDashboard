@@ -12,6 +12,7 @@ public interface IProjectService
     Task<bool> UpdateProjectAsync(Project project, int requestingUserId);
     Task<bool> AddProjectMemberAsync(int projectId, int userId, string role, int requestingUserId);
     Task<List<ProjectMember>> GetProjectMembersAsync(int projectId, int requestingUserId);
+    Task<bool> UserCanAccessProjectAsync(int projectId, int requestingUserId);
 }
 
 public class ProjectService : IProjectService
@@ -151,5 +152,20 @@ public class ProjectService : IProjectService
             .Include(pm => pm.User)
             .Where(pm => pm.ProjectId == projectId)
             .ToListAsync();
+    }
+
+    public async Task<bool> UserCanAccessProjectAsync(int projectId, int requestingUserId)
+    {
+        var project = await _context.Projects
+            .Include(p => p.ProjectMembers)
+            .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+        if (project == null)
+        {
+            return false;
+        }
+
+        return project.ProjectManagerId == requestingUserId
+            || project.ProjectMembers.Any(pm => pm.UserId == requestingUserId);
     }
 }

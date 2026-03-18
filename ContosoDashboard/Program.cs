@@ -3,6 +3,7 @@ using ContosoDashboard.Data;
 using ContosoDashboard.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using ContosoDashboard.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,9 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStat
 // Configure Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<DocumentStorageOptions>(
+    builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
 
 // Configure Mock Authentication (Cookie-based for training purposes)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -43,6 +47,10 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IDocumentAuthorizationService, DocumentAuthorizationService>();
+builder.Services.AddScoped<IDocumentActivityService, DocumentActivityService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // Add HttpContextAccessor for accessing user claims
 builder.Services.AddHttpContextAccessor();
@@ -91,7 +99,7 @@ app.Use(async (context, next) =>
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
         "font-src 'self' https://cdn.jsdelivr.net; " +
-        "img-src 'self' data: https:; " +
+        "img-src 'self' data: https: blob:; " +
         "connect-src 'self' wss: ws:;";
     
     await next();
