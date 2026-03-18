@@ -61,7 +61,7 @@
                         <span class="badge bg-info">@searchResults.Count</span>
                     </div>
                     <div class="card-body">
-                        <DocumentList Documents="searchResults" ShowSource="true" EmptyMessage="No accessible documents match the search." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                        <DocumentList Documents="searchResults" ShowSource="true" EmptyMessage="No accessible documents match the search." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" OnPreview="BeginPreview" />
                     </div>
                 </div>
             }
@@ -72,7 +72,7 @@
                     <span class="badge bg-secondary">@myDocuments.Count</span>
                 </div>
                 <div class="card-body">
-                    <DocumentList Documents="myDocuments" EmptyMessage="You have not uploaded any documents yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                    <DocumentList Documents="myDocuments" EmptyMessage="You have not uploaded any documents yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" OnPreview="BeginPreview" />
                 </div>
             </div>
 
@@ -82,9 +82,22 @@
                     <span class="badge bg-secondary">@sharedDocuments.Count</span>
                 </div>
                 <div class="card-body">
-                    <DocumentList Documents="sharedDocuments" ShowSource="true" EmptyMessage="No documents have been shared with you yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                    <DocumentList Documents="sharedDocuments" ShowSource="true" EmptyMessage="No documents have been shared with you yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" OnPreview="BeginPreview" />
                 </div>
             </div>
+
+            @if (selectedForPreview != null)
+            {
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Preview: @selectedForPreview.Title</h5>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="ClosePreview">Close</button>
+                    </div>
+                    <div class="card-body">
+                        <DocumentPreview Document="selectedForPreview" />
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
@@ -105,6 +118,7 @@
     private DocumentListItem? selectedForEdit;
     private DocumentListItem? selectedForDelete;
     private DocumentListItem? selectedForShare;
+    private DocumentListItem? selectedForPreview;
 
     protected override async Task OnInitializedAsync()
     {
@@ -204,6 +218,18 @@
         selectedForShare = myDocuments.Concat(sharedDocuments).Concat(searchResults).FirstOrDefault(d => d.DocumentId == documentId);
         selectedForEdit = null;
         selectedForDelete = null;
+        return Task.CompletedTask;
+    }
+
+    private Task BeginPreview(int documentId)
+    {
+        selectedForPreview = myDocuments.Concat(sharedDocuments).Concat(searchResults).FirstOrDefault(d => d.DocumentId == documentId);
+        return Task.CompletedTask;
+    }
+
+    private Task ClosePreview()
+    {
+        selectedForPreview = null;
         return Task.CompletedTask;
     }
 

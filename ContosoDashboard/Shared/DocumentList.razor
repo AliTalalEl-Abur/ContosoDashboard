@@ -45,6 +45,10 @@ else
                         <td>@FormatFileSize(document.FileSizeBytes)</td>
                         <td>
                             <a class="btn btn-sm btn-outline-primary me-1" href="@document.DownloadUrl">Download</a>
+                            @if (OnPreview.HasDelegate)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-success me-1" @onclick="() => OnPreview.InvokeAsync(document.DocumentId)">Preview</button>
+                            }
                             @if (document.CanEdit)
                             {
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="() => OnEdit.InvokeAsync(document.DocumentId)">Edit</button>
@@ -72,6 +76,7 @@ else
     [Parameter] public EventCallback<int> OnEdit { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
     [Parameter] public EventCallback<int> OnShare { get; set; }
+    [Parameter] public EventCallback<int> OnPreview { get; set; }
 
     private static string FormatFileSize(long bytes)
     {

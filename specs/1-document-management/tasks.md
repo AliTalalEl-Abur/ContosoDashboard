@@ -171,12 +171,12 @@
 ### Implementation for User Story 7
 
 - [X] T045 [P] [US7] Add dashboard document summary queries in `ContosoDashboard/Services/DashboardService.cs` and `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T046 [P] [US7] Add task attachment queries and commands in `ContosoDashboard/Services/TaskService.cs` and `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T047 [P] [US7] Add admin activity filtering/query support in `ContosoDashboard/Services/DocumentActivityService.cs` and `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T048 [US7] Update the dashboard UI in `ContosoDashboard/Pages/Index.razor`
-- [ ] T049 [US7] Update task document attachment UI in `ContosoDashboard/Pages/Tasks.razor`
-- [ ] T050 [US7] Create the admin audit page in `ContosoDashboard/Pages/DocumentActivity.razor`
-- [ ] T051 [US7] Update navigation for documents and admin audit access in `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T046 [P] [US7] Add task attachment queries and commands in `ContosoDashboard/Services/TaskService.cs` and `ContosoDashboard/Services/DocumentService.cs`
+- [X] T047 [P] [US7] Add admin activity filtering/query support in `ContosoDashboard/Services/DocumentActivityService.cs` and `ContosoDashboard/Services/DocumentService.cs`
+- [X] T048 [US7] Update the dashboard UI in `ContosoDashboard/Pages/Index.razor`
+- [X] T049 [US7] Update task document attachment UI in `ContosoDashboard/Pages/Tasks.razor`
+- [X] T050 [US7] Create the admin audit page in `ContosoDashboard/Pages/DocumentActivity.razor`
+- [X] T051 [US7] Update navigation for documents and admin audit access in `ContosoDashboard/Shared/NavMenu.razor`
 - [ ] T052 [US7] Execute and record dashboard/task/admin verification in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: All user stories are independently functional
@@ -187,8 +187,8 @@
 
 **Purpose**: Improve user experience, performance, and cross-story verification.
 
-- [ ] T053 [P] Add PDF/image preview UI in `ContosoDashboard/Shared/DocumentPreview.razor` and integrate it into `ContosoDashboard/Pages/Documents.razor`
-- [ ] T054 Tune query performance and paging behavior in `ContosoDashboard/Data/ApplicationDbContext.cs` and `ContosoDashboard/Services/DocumentService.cs`
+- [X] T053 [P] Add PDF/image preview UI in `ContosoDashboard/Shared/DocumentPreview.razor` and integrate it into `ContosoDashboard/Pages/Documents.razor`
+- [X] T054 Tune query performance and paging behavior in `ContosoDashboard/Data/ApplicationDbContext.cs` and `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T055 Re-run and finalize the full end-to-end verification flow in `specs/1-document-management/quickstart.md`
 - [ ] T056 Review authorization failures, validation messages, and UX consistency in `ContosoDashboard/Pages/Documents.razor`, `ContosoDashboard/Pages/ProjectDetails.razor`, `ContosoDashboard/Pages/DocumentActivity.razor`, and `ContosoDashboard/Shared/DocumentList.razor`
 

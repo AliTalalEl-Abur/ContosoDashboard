@@ -5,6 +5,7 @@
 @using System.Security.Claims
 @attribute [Authorize]
 @inject ITaskService TaskService
+@inject IDocumentService DocumentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My Tasks - ContosoDashboard</PageTitle>
@@ -76,7 +77,7 @@
                 <tbody>
                     @foreach (var task in tasks)
                     {
-                        <tr>
+                        <tr class="@(expandedTaskId == task.TaskId ? "table-active" : string.Empty)">
                             <td>
                                 <strong>@task.Title</strong>
                                 @if (!string.IsNullOrEmpty(task.Description))
@@ -123,11 +124,47 @@
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewTaskDetails(task.TaskId)">
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ToggleTaskDetails(task.TaskId)">
                                     <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => OpenAttachDocument(task.TaskId)">
+                                    <i class="bi bi-paperclip"></i>
                                 </button>
                             </td>
                         </tr>
+
+                        @if (expandedTaskId == task.TaskId)
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="p-3 border rounded bg-light">
+                                        <h6 class="mb-3">Task Documents</h6>
+
+                                        @if (taskDocuments.TryGetValue(task.TaskId, out var docs))
+                                        {
+                                            <DocumentList Documents="docs" EmptyMessage="No documents attached to this task yet." />
+                                        }
+
+                                        @if (task.ProjectId.HasValue)
+                                        {
+                                            <div class="mt-3">
+                                                <label class="form-label">Attach existing document by ID</label>
+                                                <div class="input-group mb-2">
+                                                    <input class="form-control" type="number" @bind="attachDocumentId" placeholder="Document ID" />
+                                                    <button class="btn btn-outline-primary" @onclick="() => AttachExistingDocument(task.TaskId)">Attach</button>
+                                                </div>
+
+                                                <DocumentUploadForm FixedProjectId="task.ProjectId" FixedTaskId="task.TaskId" UploadCompleted="() => RefreshTaskDocuments(task.TaskId)" ButtonLabel="Upload and attach" />
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted mb-0">This task is not linked to a project. Upload attachment is unavailable.</p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -137,9 +174,12 @@
 
 @code {
     private List<TaskItem>? tasks;
+    private readonly Dictionary<int, List<DocumentListItem>> taskDocuments = new();
     private string filterStatus = "";
     private string filterPriority = "";
     private int currentUserId = 0;
+    private int? expandedTaskId;
+    private int? attachDocumentId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -185,9 +225,44 @@
         // TODO: Implement modal dialog for creating tasks
     }
 
-    private void ViewTaskDetails(int taskId)
+    private async Task ToggleTaskDetails(int taskId)
     {
-        // TODO: Navigate to task details or show modal
+        if (expandedTaskId == taskId)
+        {
+            expandedTaskId = null;
+            return;
+        }
+
+        expandedTaskId = taskId;
+        await RefreshTaskDocuments(taskId);
+    }
+
+    private async Task OpenAttachDocument(int taskId)
+    {
+        expandedTaskId = taskId;
+        await RefreshTaskDocuments(taskId);
+    }
+
+    private async Task RefreshTaskDocuments(int taskId)
+    {
+        var docs = await TaskService.GetTaskDocumentsAsync(taskId, currentUserId);
+        taskDocuments[taskId] = docs;
+        StateHasChanged();
+    }
+
+    private async Task AttachExistingDocument(int taskId)
+    {
+        if (!attachDocumentId.HasValue || attachDocumentId.Value <= 0)
+        {
+            return;
+        }
+
+        var attached = await TaskService.AttachDocumentToTaskAsync(taskId, attachDocumentId.Value, currentUserId);
+        if (attached)
+        {
+            attachDocumentId = null;
+            await RefreshTaskDocuments(taskId);
+        }
     }
 
     private string GetPriorityColor(TaskPriority priority)

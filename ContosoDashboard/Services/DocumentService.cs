@@ -17,6 +17,8 @@ public interface IDocumentService
     Task<bool> ReplaceFileAsync(int documentId, ReplaceDocumentRequest request, Stream content, CancellationToken cancellationToken = default);
     Task<bool> DeleteDocumentAsync(int documentId, int userId, string? reason = null);
     Task<bool> ShareDocumentAsync(int documentId, DocumentShareRequest request);
+    Task<List<DocumentListItem>> GetTaskDocumentsAsync(int taskId, int userId);
+    Task<bool> AttachDocumentToTaskAsync(int taskId, int documentId, int userId);
     Task<List<DocumentListItem>> GetRecentDocumentsAsync(int userId, int take = 5);
     Task<int> GetDocumentCountAsync(int userId);
 }
@@ -49,6 +51,34 @@ public class DocumentService : IDocumentService
     public async Task<DocumentListItem> UploadDocumentAsync(DocumentUploadRequest request, Stream content, CancellationToken cancellationToken = default)
     {
         ValidateUploadRequest(request);
+
+        if (request.TaskId.HasValue)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .ThenInclude(p => p.ProjectMembers)
+                .FirstOrDefaultAsync(t => t.TaskId == request.TaskId.Value, cancellationToken);
+
+            if (task == null)
+            {
+                throw new InvalidOperationException("The selected task does not exist.");
+            }
+
+            var hasTaskAccess = task.AssignedUserId == request.RequestingUserId
+                || task.CreatedByUserId == request.RequestingUserId
+                || task.Project?.ProjectManagerId == request.RequestingUserId
+                || task.Project?.ProjectMembers.Any(pm => pm.UserId == request.RequestingUserId) == true;
+
+            if (!hasTaskAccess)
+            {
+                throw new InvalidOperationException("You are not authorized to attach documents to this task.");
+            }
+
+            if (!request.ProjectId.HasValue && task.ProjectId.HasValue)
+            {
+                request.ProjectId = task.ProjectId;
+            }
+        }
 
         if (request.ProjectId.HasValue && !await _authorizationService.CanAccessProjectAsync(request.ProjectId.Value, request.RequestingUserId))
         {
@@ -112,6 +142,7 @@ public class DocumentService : IDocumentService
     public async Task<List<DocumentListItem>> GetMyDocumentsAsync(int userId, DocumentQueryOptions? options = null)
     {
         var query = _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Where(d => !d.IsDeleted && d.UploadedByUserId == userId);
@@ -132,6 +163,7 @@ public class DocumentService : IDocumentService
             .ToListAsync();
 
         var documents = await _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Include(d => d.Shares)
@@ -150,6 +182,7 @@ public class DocumentService : IDocumentService
         }
 
         var documents = await _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Where(d => !d.IsDeleted && d.ProjectId == projectId)
@@ -179,6 +212,90 @@ public class DocumentService : IDocumentService
 
         var documents = await query.ToListAsync();
         return await MapDocumentsAsync(documents, userId);
+    }
+
+    public async Task<List<DocumentListItem>> GetTaskDocumentsAsync(int taskId, int userId)
+    {
+        var task = await _context.Tasks
+            .Include(t => t.Project)
+            .ThenInclude(p => p.ProjectMembers)
+            .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+        if (task == null)
+        {
+            return new List<DocumentListItem>();
+        }
+
+        var hasTaskAccess = task.AssignedUserId == userId
+            || task.CreatedByUserId == userId
+            || task.Project?.ProjectManagerId == userId
+            || task.Project?.ProjectMembers.Any(pm => pm.UserId == userId) == true;
+
+        if (!hasTaskAccess)
+        {
+            return new List<DocumentListItem>();
+        }
+
+        var documents = await _context.TaskDocuments
+            .AsNoTracking()
+            .Where(td => td.TaskId == taskId)
+            .Select(td => td.Document)
+            .Include(d => d.Project)
+            .Include(d => d.UploadedByUser)
+            .Where(d => !d.IsDeleted)
+            .OrderByDescending(d => d.UploadedAtUtc)
+            .ToListAsync();
+
+        return await MapDocumentsAsync(documents, userId);
+    }
+
+    public async Task<bool> AttachDocumentToTaskAsync(int taskId, int documentId, int userId)
+    {
+        var task = await _context.Tasks
+            .Include(t => t.Project)
+            .ThenInclude(p => p.ProjectMembers)
+            .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+        var document = await _context.Documents
+            .Include(d => d.Project)
+            .Include(d => d.Shares)
+            .FirstOrDefaultAsync(d => d.DocumentId == documentId && !d.IsDeleted);
+
+        if (task == null || document == null)
+        {
+            return false;
+        }
+
+        var hasTaskAccess = task.AssignedUserId == userId
+            || task.CreatedByUserId == userId
+            || task.Project?.ProjectManagerId == userId
+            || task.Project?.ProjectMembers.Any(pm => pm.UserId == userId) == true;
+
+        if (!hasTaskAccess || !await _authorizationService.CanViewDocumentAsync(document, userId))
+        {
+            return false;
+        }
+
+        var exists = await _context.TaskDocuments.AnyAsync(td => td.TaskId == taskId && td.DocumentId == documentId);
+        if (!exists)
+        {
+            _context.TaskDocuments.Add(new TaskDocument
+            {
+                TaskId = taskId,
+                DocumentId = documentId,
+                AttachedAtUtc = DateTime.UtcNow,
+                AttachedByUserId = userId
+            });
+        }
+
+        if (!document.ProjectId.HasValue && task.ProjectId.HasValue)
+        {
+            document.ProjectId = task.ProjectId;
+        }
+
+        await _context.SaveChangesAsync();
+        await _activityService.LogAsync(documentId, userId, DocumentActivityTypes.UpdateMetadata, $"Attached to task {taskId}");
+        return true;
     }
 
     public async Task<DocumentDownloadResult?> GetDownloadAsync(int documentId, int userId, CancellationToken cancellationToken = default)
@@ -367,6 +484,7 @@ public class DocumentService : IDocumentService
     public async Task<List<DocumentListItem>> GetRecentDocumentsAsync(int userId, int take = 5)
     {
         var documents = await _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Where(d => !d.IsDeleted && d.UploadedByUserId == userId)
@@ -396,6 +514,7 @@ public class DocumentService : IDocumentService
         var isAdmin = _context.Users.Any(u => u.UserId == userId && u.Role == UserRole.Administrator);
 
         var query = _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Include(d => d.Shares)
@@ -466,6 +585,9 @@ public class DocumentService : IDocumentService
 
     private async Task<DocumentListItem> MapDocumentAsync(Document document, int userId)
     {
+        var canEdit = await _authorizationService.CanEditDocumentAsync(document, userId);
+        var canDelete = await _authorizationService.CanDeleteDocumentAsync(document, userId);
+
         return new DocumentListItem
         {
             DocumentId = document.DocumentId,
@@ -482,15 +604,16 @@ public class DocumentService : IDocumentService
             ProjectId = document.ProjectId,
             ProjectName = document.Project?.Name,
             SourceLabel = ResolveSourceLabel(document, userId),
-            CanEdit = await _authorizationService.CanEditDocumentAsync(document, userId),
-            CanDelete = await _authorizationService.CanDeleteDocumentAsync(document, userId),
-            CanShare = await _authorizationService.CanEditDocumentAsync(document, userId)
+            CanEdit = canEdit,
+            CanDelete = canDelete,
+            CanShare = canEdit
         };
     }
 
     private async Task<DocumentListItem?> BuildListItemAsync(int documentId, int userId, CancellationToken cancellationToken)
     {
         var document = await _context.Documents
+            .AsNoTracking()
             .Include(d => d.Project)
             .Include(d => d.UploadedByUser)
             .Include(d => d.Shares)

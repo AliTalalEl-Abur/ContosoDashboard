@@ -15,6 +15,43 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label">Action</label>
+                    <select class="form-select" @bind="actionTypeFilter">
+                        <option value="">All</option>
+                        @foreach (var action in actionTypes)
+                        {
+                            <option value="@action">@action</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Actor User ID</label>
+                    <input class="form-control" type="number" @bind="actorUserIdFilter" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Document ID</label>
+                    <input class="form-control" type="number" @bind="documentIdFilter" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From</label>
+                    <InputDate class="form-control" @bind-Value="fromFilter" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To</label>
+                    <InputDate class="form-control" @bind-Value="toFilter" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary" @onclick="LoadActivities">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (activities == null)
     {
         <p><em>Loading...</em></p>
@@ -53,15 +90,41 @@
 
 @code {
     private List<ModelDocumentActivity>? activities;
+    private int currentUserId;
+    private readonly string[] actionTypes =
+    [
+        DocumentActivityTypes.Upload,
+        DocumentActivityTypes.Download,
+        DocumentActivityTypes.Share,
+        DocumentActivityTypes.UpdateMetadata,
+        DocumentActivityTypes.ReplaceFile,
+        DocumentActivityTypes.Delete
+    ];
+    private string? actionTypeFilter;
+    private int? actorUserIdFilter;
+    private int? documentIdFilter;
+    private DateTime? fromFilter;
+    private DateTime? toFilter;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (!int.TryParse(authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+        if (!int.TryParse(authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out currentUserId))
         {
             return;
         }
 
-        activities = await DocumentActivityService.GetActivityAsync(userId);
+        await LoadActivities();
+    }
+
+    private async Task LoadActivities()
+    {
+        activities = await DocumentActivityService.GetActivityAsync(
+            currentUserId,
+            actionTypeFilter,
+            actorUserIdFilter,
+            documentIdFilter,
+            fromFilter,
+            toFilter);
     }
 }
