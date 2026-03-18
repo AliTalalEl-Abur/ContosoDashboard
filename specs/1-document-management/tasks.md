@@ -66,7 +66,7 @@
 - [X] T016 [P] [US1] Build the upload form component in `ContosoDashboard/Shared/DocumentUploadForm.razor`
 - [X] T017 [US1] Create the initial document workspace page in `ContosoDashboard/Pages/Documents.razor`
 - [X] T018 [US1] Surface the Documents entry point in `ContosoDashboard/Shared/NavMenu.razor`
-- [ ] T019 [US1] Execute and record the upload/manual negative checks in `specs/1-document-management/quickstart.md`
+- [X] T019 [US1] Execute and record the upload/manual negative checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -84,7 +84,7 @@
 - [X] T021 [US2] Implement owner-scoped listing, sorting, and filtering in `ContosoDashboard/Services/DocumentService.cs`
 - [X] T022 [P] [US2] Build reusable filtering and list UI in `ContosoDashboard/Shared/DocumentFilterBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
 - [X] T023 [US2] Integrate the My Documents experience into `ContosoDashboard/Pages/Documents.razor`
-- [ ] T024 [US2] Execute and record sorting/filter verification in `specs/1-document-management/quickstart.md`
+- [X] T024 [US2] Execute and record sorting/filter verification in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Stories 1 and 2 both work independently
 
@@ -102,7 +102,7 @@
 - [X] T026 [P] [US3] Implement the authorized file streaming endpoint in `ContosoDashboard/Pages/DocumentDownload.cshtml` and `ContosoDashboard/Pages/DocumentDownload.cshtml.cs`
 - [X] T027 [P] [US3] Add the project documents section to `ContosoDashboard/Pages/ProjectDetails.razor`
 - [X] T028 [US3] Wire project-context upload association from `ContosoDashboard/Pages/ProjectDetails.razor` into `ContosoDashboard/Shared/DocumentUploadForm.razor`
-- [ ] T029 [US3] Execute and record project-visibility and denied-access checks in `specs/1-document-management/quickstart.md`
+- [X] T029 [US3] Execute and record project-visibility and denied-access checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Stories 1-3 are independently functional
 
@@ -119,7 +119,7 @@
 - [X] T030 [US4] Implement metadata search, paging, and deterministic ordering in `ContosoDashboard/Services/DocumentService.cs`
 - [X] T031 [P] [US4] Build the search input and empty-state UI in `ContosoDashboard/Shared/DocumentSearchBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
 - [X] T032 [US4] Integrate search results and state handling into `ContosoDashboard/Pages/Documents.razor`
-- [ ] T033 [US4] Execute and record special-character and latency checks in `specs/1-document-management/quickstart.md`
+- [X] T033 [US4] Execute and record special-character and latency checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: Search is independently testable without relying on later stories
 
@@ -137,7 +137,7 @@
 - [X] T035 [US5] Implement edit, replace, delete, and cleanup/audit behavior in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
 - [X] T036 [P] [US5] Build lifecycle action UI in `ContosoDashboard/Shared/DocumentEditModal.razor` and `ContosoDashboard/Shared/DocumentDeleteDialog.razor`
 - [X] T037 [US5] Integrate lifecycle actions into `ContosoDashboard/Pages/Documents.razor` and `ContosoDashboard/Pages/ProjectDetails.razor`
-- [ ] T038 [US5] Execute and record owner/manager lifecycle checks in `specs/1-document-management/quickstart.md`
+- [X] T038 [US5] Execute and record owner/manager lifecycle checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 5 can be demonstrated without US6 or US7
 
@@ -156,7 +156,7 @@
 - [X] T041 [P] [US6] Integrate document share notifications in `ContosoDashboard/Services/NotificationService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
 - [X] T042 [P] [US6] Build sharing and Shared with Me UI in `ContosoDashboard/Shared/DocumentShareModal.razor` and `ContosoDashboard/Pages/Documents.razor`
 - [X] T043 [US6] Add shared-documents navigation affordance in `ContosoDashboard/Shared/NavMenu.razor`
-- [ ] T044 [US6] Execute and record sharing and access-denial checks in `specs/1-document-management/quickstart.md`
+- [X] T044 [US6] Execute and record sharing and access-denial checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 6 adds collaboration without blocking prior story validation
 
@@ -189,7 +189,7 @@
 
 - [X] T053 [P] Add PDF/image preview UI in `ContosoDashboard/Shared/DocumentPreview.razor` and integrate it into `ContosoDashboard/Pages/Documents.razor`
 - [X] T054 Tune query performance and paging behavior in `ContosoDashboard/Data/ApplicationDbContext.cs` and `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T055 Re-run and finalize the full end-to-end verification flow in `specs/1-document-management/quickstart.md`
+- [X] T055 Re-run and finalize the full end-to-end verification flow in `specs/1-document-management/quickstart.md`
 - [X] T056 Review authorization failures, validation messages, and UX consistency in `ContosoDashboard/Pages/Documents.razor`, `ContosoDashboard/Pages/ProjectDetails.razor`, `ContosoDashboard/Pages/DocumentActivity.razor`, and `ContosoDashboard/Shared/DocumentList.razor`
 
 ---
