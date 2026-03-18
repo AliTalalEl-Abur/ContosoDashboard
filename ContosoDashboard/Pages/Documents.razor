@@ -1,0 +1,217 @@
+@page "/documents"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject IUserService UserService
+@inject IProjectService ProjectService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Documents - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1>Documents</h1>
+            <p class="text-muted mb-0">Upload, search, organize, and share documents you can access.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(pageMessage))
+    {
+        <div class="alert alert-info">@pageMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload Document</h5>
+                </div>
+                <div class="card-body">
+                    <DocumentUploadForm UploadCompleted="HandleUploadCompleted" />
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filter My Documents</h5>
+                </div>
+                <div class="card-body">
+                    <DocumentFilterBar Value="filterState" Projects="availableProjects" ValueChanged="HandleFilterChanged" OnApply="ApplyFiltersAsync" OnClear="ClearFiltersAsync" />
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Search Accessible Documents</h5>
+                </div>
+                <div class="card-body">
+                    <DocumentSearchBar SearchText="searchText" SearchTextChanged="HandleSearchTextChanged" OnSearch="RunSearchAsync" OnClear="ClearSearchAsync" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            @if (searchResults.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Search Results</h5>
+                        <span class="badge bg-info">@searchResults.Count</span>
+                    </div>
+                    <div class="card-body">
+                        <DocumentList Documents="searchResults" ShowSource="true" EmptyMessage="No accessible documents match the search." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                    </div>
+                </div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My Documents</h5>
+                    <span class="badge bg-secondary">@myDocuments.Count</span>
+                </div>
+                <div class="card-body">
+                    <DocumentList Documents="myDocuments" EmptyMessage="You have not uploaded any documents yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                </div>
+            </div>
+
+            <div class="card" id="shared-documents">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Shared with Me</h5>
+                    <span class="badge bg-secondary">@sharedDocuments.Count</span>
+                </div>
+                <div class="card-body">
+                    <DocumentList Documents="sharedDocuments" ShowSource="true" EmptyMessage="No documents have been shared with you yet." OnEdit="BeginEdit" OnDelete="BeginDelete" OnShare="BeginShare" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <DocumentEditModal Document="selectedForEdit" OnSaved="RefreshAllAsync" OnCancelled="CloseModals" />
+    <DocumentDeleteDialog Document="selectedForDelete" OnDeleted="RefreshAllAsync" OnCancelled="CloseModals" />
+    <DocumentShareModal Document="selectedForShare" OnShared="RefreshAllAsync" OnCancelled="CloseModals" />
+</div>
+
+@code {
+    private int currentUserId;
+    private List<Project> availableProjects = new();
+    private List<DocumentListItem> myDocuments = new();
+    private List<DocumentListItem> sharedDocuments = new();
+    private List<DocumentListItem> searchResults = new();
+    private DocumentFilterState filterState = new();
+    private string searchText = string.Empty;
+    private string? pageMessage;
+    private DocumentListItem? selectedForEdit;
+    private DocumentListItem? selectedForDelete;
+    private DocumentListItem? selectedForShare;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        if (currentUserId <= 0)
+        {
+            return;
+        }
+
+        availableProjects = await ProjectService.GetUserProjectsAsync(currentUserId);
+        await RefreshAllAsync();
+    }
+
+    private async Task RefreshAllAsync()
+    {
+        myDocuments = await DocumentService.GetMyDocumentsAsync(currentUserId, filterState.ToQueryOptions());
+        sharedDocuments = await DocumentService.GetSharedDocumentsAsync(currentUserId);
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            searchResults = await DocumentService.SearchDocumentsAsync(currentUserId, searchText);
+        }
+        else
+        {
+            searchResults.Clear();
+        }
+
+        await CloseModals();
+        StateHasChanged();
+    }
+
+    private async Task HandleUploadCompleted()
+    {
+        pageMessage = "Document uploaded successfully.";
+        await RefreshAllAsync();
+    }
+
+    private Task HandleFilterChanged(DocumentFilterState state)
+    {
+        filterState = state;
+        return Task.CompletedTask;
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        myDocuments = await DocumentService.GetMyDocumentsAsync(currentUserId, filterState.ToQueryOptions());
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        filterState = new DocumentFilterState();
+        myDocuments = await DocumentService.GetMyDocumentsAsync(currentUserId, filterState.ToQueryOptions());
+    }
+
+    private Task HandleSearchTextChanged(string value)
+    {
+        searchText = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task RunSearchAsync()
+    {
+        searchResults = await DocumentService.SearchDocumentsAsync(currentUserId, searchText);
+    }
+
+    private Task ClearSearchAsync()
+    {
+        searchText = string.Empty;
+        searchResults.Clear();
+        return Task.CompletedTask;
+    }
+
+    private Task BeginEdit(int documentId)
+    {
+        selectedForEdit = myDocuments.Concat(sharedDocuments).Concat(searchResults).FirstOrDefault(d => d.DocumentId == documentId);
+        selectedForDelete = null;
+        selectedForShare = null;
+        return Task.CompletedTask;
+    }
+
+    private Task BeginDelete(int documentId)
+    {
+        selectedForDelete = myDocuments.Concat(sharedDocuments).Concat(searchResults).FirstOrDefault(d => d.DocumentId == documentId);
+        selectedForEdit = null;
+        selectedForShare = null;
+        return Task.CompletedTask;
+    }
+
+    private Task BeginShare(int documentId)
+    {
+        selectedForShare = myDocuments.Concat(sharedDocuments).Concat(searchResults).FirstOrDefault(d => d.DocumentId == documentId);
+        selectedForEdit = null;
+        selectedForDelete = null;
+        return Task.CompletedTask;
+    }
+
+    private Task CloseModals()
+    {
+        selectedForEdit = null;
+        selectedForDelete = null;
+        selectedForShare = null;
+        return Task.CompletedTask;
+    }
+}

@@ -26,9 +26,9 @@
 
 **Purpose**: Prepare configuration, routes, and feature entry points before persistence and story work starts.
 
-- [ ] T001 Review and reserve feature extension points in `ContosoDashboard/Program.cs`, `ContosoDashboard/Pages/ProjectDetails.razor`, `ContosoDashboard/Pages/Tasks.razor`, `ContosoDashboard/Pages/Index.razor`, and `ContosoDashboard/Shared/NavMenu.razor`
-- [ ] T002 Add document-storage configuration and limits to `ContosoDashboard/appsettings.json`, `ContosoDashboard/appsettings.Development.json`, and `ContosoDashboard/Program.cs`
-- [ ] T003 [P] Create feature file placeholders in `ContosoDashboard/Pages/Documents.razor`, `ContosoDashboard/Pages/DocumentActivity.razor`, `ContosoDashboard/Pages/DocumentDownload.cshtml`, `ContosoDashboard/Pages/DocumentDownload.cshtml.cs`, `ContosoDashboard/Shared/DocumentUploadForm.razor`, and `ContosoDashboard/Shared/DocumentList.razor`
+- [X] T001 Review and reserve feature extension points in `ContosoDashboard/Program.cs`, `ContosoDashboard/Pages/ProjectDetails.razor`, `ContosoDashboard/Pages/Tasks.razor`, `ContosoDashboard/Pages/Index.razor`, and `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T002 Add document-storage configuration and limits to `ContosoDashboard/appsettings.json`, `ContosoDashboard/appsettings.Development.json`, and `ContosoDashboard/Program.cs`
+- [X] T003 [P] Create feature file placeholders in `ContosoDashboard/Pages/Documents.razor`, `ContosoDashboard/Pages/DocumentActivity.razor`, `ContosoDashboard/Pages/DocumentDownload.cshtml`, `ContosoDashboard/Pages/DocumentDownload.cshtml.cs`, `ContosoDashboard/Shared/DocumentUploadForm.razor`, and `ContosoDashboard/Shared/DocumentList.razor`
 
 ---
 
@@ -38,16 +38,16 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create the document aggregate model in `ContosoDashboard/Models/Document.cs`
-- [ ] T005 [P] Create sharing and audit entities in `ContosoDashboard/Models/DocumentShare.cs` and `ContosoDashboard/Models/DocumentActivity.cs`
-- [ ] T006 [P] Add the task attachment bridge model in `ContosoDashboard/Models/TaskDocument.cs`
-- [ ] T007 Update EF persistence, relationships, and indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`
-- [ ] T008 Add the EF Core migration for document tables and indexes in `ContosoDashboard/Migrations/`
-- [ ] T009 Create the storage seam in `ContosoDashboard/Services/IFileStorageService.cs` and `ContosoDashboard/Services/LocalFileStorageService.cs`
-- [ ] T010 [P] Create centralized authorization logic in `ContosoDashboard/Services/DocumentAuthorizationService.cs`
-- [ ] T011 [P] Create audit logging/query support in `ContosoDashboard/Services/DocumentActivityService.cs`
-- [ ] T012 Create the core orchestration service shell in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T013 Register document services, options, and storage root wiring in `ContosoDashboard/Program.cs`
+- [X] T004 Create the document aggregate model in `ContosoDashboard/Models/Document.cs`
+- [X] T005 [P] Create sharing and audit entities in `ContosoDashboard/Models/DocumentShare.cs` and `ContosoDashboard/Models/DocumentActivity.cs`
+- [X] T006 [P] Add the task attachment bridge model in `ContosoDashboard/Models/TaskDocument.cs`
+- [X] T007 Update EF persistence, relationships, and indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`
+- [X] T008 Add the EF Core migration for document tables and indexes in `ContosoDashboard/Migrations/`
+- [X] T009 Create the storage seam in `ContosoDashboard/Services/IFileStorageService.cs` and `ContosoDashboard/Services/LocalFileStorageService.cs`
+- [X] T010 [P] Create centralized authorization logic in `ContosoDashboard/Services/DocumentAuthorizationService.cs`
+- [X] T011 [P] Create audit logging/query support in `ContosoDashboard/Services/DocumentActivityService.cs`
+- [X] T012 Create the core orchestration service shell in `ContosoDashboard/Services/DocumentService.cs`
+- [X] T013 Register document services, options, and storage root wiring in `ContosoDashboard/Program.cs`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -61,11 +61,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Add upload request and list item models in `ContosoDashboard/Models/DocumentUploadRequest.cs` and `ContosoDashboard/Models/DocumentListItem.cs`
-- [ ] T015 [US1] Implement upload validation, file-write ordering, and orphan cleanup in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T016 [P] [US1] Build the upload form component in `ContosoDashboard/Shared/DocumentUploadForm.razor`
-- [ ] T017 [US1] Create the initial document workspace page in `ContosoDashboard/Pages/Documents.razor`
-- [ ] T018 [US1] Surface the Documents entry point in `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T014 [P] [US1] Add upload request and list item models in `ContosoDashboard/Models/DocumentUploadRequest.cs` and `ContosoDashboard/Models/DocumentListItem.cs`
+- [X] T015 [US1] Implement upload validation, file-write ordering, and orphan cleanup in `ContosoDashboard/Services/DocumentService.cs`
+- [X] T016 [P] [US1] Build the upload form component in `ContosoDashboard/Shared/DocumentUploadForm.razor`
+- [X] T017 [US1] Create the initial document workspace page in `ContosoDashboard/Pages/Documents.razor`
+- [X] T018 [US1] Surface the Documents entry point in `ContosoDashboard/Shared/NavMenu.razor`
 - [ ] T019 [US1] Execute and record the upload/manual negative checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
@@ -80,10 +80,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Add query/filter models in `ContosoDashboard/Models/DocumentQueryOptions.cs` and `ContosoDashboard/Models/DocumentFilterState.cs`
-- [ ] T021 [US2] Implement owner-scoped listing, sorting, and filtering in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T022 [P] [US2] Build reusable filtering and list UI in `ContosoDashboard/Shared/DocumentFilterBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
-- [ ] T023 [US2] Integrate the My Documents experience into `ContosoDashboard/Pages/Documents.razor`
+- [X] T020 [P] [US2] Add query/filter models in `ContosoDashboard/Models/DocumentQueryOptions.cs` and `ContosoDashboard/Models/DocumentFilterState.cs`
+- [X] T021 [US2] Implement owner-scoped listing, sorting, and filtering in `ContosoDashboard/Services/DocumentService.cs`
+- [X] T022 [P] [US2] Build reusable filtering and list UI in `ContosoDashboard/Shared/DocumentFilterBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
+- [X] T023 [US2] Integrate the My Documents experience into `ContosoDashboard/Pages/Documents.razor`
 - [ ] T024 [US2] Execute and record sorting/filter verification in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Stories 1 and 2 both work independently
@@ -98,10 +98,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Extend project-scoped query and access rules in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/ProjectService.cs`
-- [ ] T026 [P] [US3] Implement the authorized file streaming endpoint in `ContosoDashboard/Pages/DocumentDownload.cshtml` and `ContosoDashboard/Pages/DocumentDownload.cshtml.cs`
-- [ ] T027 [P] [US3] Add the project documents section to `ContosoDashboard/Pages/ProjectDetails.razor`
-- [ ] T028 [US3] Wire project-context upload association from `ContosoDashboard/Pages/ProjectDetails.razor` into `ContosoDashboard/Shared/DocumentUploadForm.razor`
+- [X] T025 [US3] Extend project-scoped query and access rules in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/ProjectService.cs`
+- [X] T026 [P] [US3] Implement the authorized file streaming endpoint in `ContosoDashboard/Pages/DocumentDownload.cshtml` and `ContosoDashboard/Pages/DocumentDownload.cshtml.cs`
+- [X] T027 [P] [US3] Add the project documents section to `ContosoDashboard/Pages/ProjectDetails.razor`
+- [X] T028 [US3] Wire project-context upload association from `ContosoDashboard/Pages/ProjectDetails.razor` into `ContosoDashboard/Shared/DocumentUploadForm.razor`
 - [ ] T029 [US3] Execute and record project-visibility and denied-access checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Stories 1-3 are independently functional
@@ -116,9 +116,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Implement metadata search, paging, and deterministic ordering in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T031 [P] [US4] Build the search input and empty-state UI in `ContosoDashboard/Shared/DocumentSearchBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
-- [ ] T032 [US4] Integrate search results and state handling into `ContosoDashboard/Pages/Documents.razor`
+- [X] T030 [US4] Implement metadata search, paging, and deterministic ordering in `ContosoDashboard/Services/DocumentService.cs`
+- [X] T031 [P] [US4] Build the search input and empty-state UI in `ContosoDashboard/Shared/DocumentSearchBar.razor` and `ContosoDashboard/Shared/DocumentList.razor`
+- [X] T032 [US4] Integrate search results and state handling into `ContosoDashboard/Pages/Documents.razor`
 - [ ] T033 [US4] Execute and record special-character and latency checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: Search is independently testable without relying on later stories
@@ -133,10 +133,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T034 [P] [US5] Add metadata update and replace request models in `ContosoDashboard/Models/UpdateDocumentRequest.cs` and `ContosoDashboard/Models/ReplaceDocumentRequest.cs`
-- [ ] T035 [US5] Implement edit, replace, delete, and cleanup/audit behavior in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
-- [ ] T036 [P] [US5] Build lifecycle action UI in `ContosoDashboard/Shared/DocumentEditModal.razor` and `ContosoDashboard/Shared/DocumentDeleteDialog.razor`
-- [ ] T037 [US5] Integrate lifecycle actions into `ContosoDashboard/Pages/Documents.razor` and `ContosoDashboard/Pages/ProjectDetails.razor`
+- [X] T034 [P] [US5] Add metadata update and replace request models in `ContosoDashboard/Models/UpdateDocumentRequest.cs` and `ContosoDashboard/Models/ReplaceDocumentRequest.cs`
+- [X] T035 [US5] Implement edit, replace, delete, and cleanup/audit behavior in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
+- [X] T036 [P] [US5] Build lifecycle action UI in `ContosoDashboard/Shared/DocumentEditModal.razor` and `ContosoDashboard/Shared/DocumentDeleteDialog.razor`
+- [X] T037 [US5] Integrate lifecycle actions into `ContosoDashboard/Pages/Documents.razor` and `ContosoDashboard/Pages/ProjectDetails.razor`
 - [ ] T038 [US5] Execute and record owner/manager lifecycle checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 5 can be demonstrated without US6 or US7
@@ -151,11 +151,11 @@
 
 ### Implementation for User Story 6
 
-- [ ] T039 [P] [US6] Add share request and shared-list models in `ContosoDashboard/Models/DocumentShareRequest.cs` and `ContosoDashboard/Models/SharedDocumentListItem.cs`
-- [ ] T040 [US6] Implement share persistence and recipient resolution in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/DocumentAuthorizationService.cs`
-- [ ] T041 [P] [US6] Integrate document share notifications in `ContosoDashboard/Services/NotificationService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
-- [ ] T042 [P] [US6] Build sharing and Shared with Me UI in `ContosoDashboard/Shared/DocumentShareModal.razor` and `ContosoDashboard/Pages/Documents.razor`
-- [ ] T043 [US6] Add shared-documents navigation affordance in `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T039 [P] [US6] Add share request and shared-list models in `ContosoDashboard/Models/DocumentShareRequest.cs` and `ContosoDashboard/Models/SharedDocumentListItem.cs`
+- [X] T040 [US6] Implement share persistence and recipient resolution in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Services/DocumentAuthorizationService.cs`
+- [X] T041 [P] [US6] Integrate document share notifications in `ContosoDashboard/Services/NotificationService.cs` and `ContosoDashboard/Services/DocumentActivityService.cs`
+- [X] T042 [P] [US6] Build sharing and Shared with Me UI in `ContosoDashboard/Shared/DocumentShareModal.razor` and `ContosoDashboard/Pages/Documents.razor`
+- [X] T043 [US6] Add shared-documents navigation affordance in `ContosoDashboard/Shared/NavMenu.razor`
 - [ ] T044 [US6] Execute and record sharing and access-denial checks in `specs/1-document-management/quickstart.md`
 
 **Checkpoint**: User Story 6 adds collaboration without blocking prior story validation
@@ -170,7 +170,7 @@
 
 ### Implementation for User Story 7
 
-- [ ] T045 [P] [US7] Add dashboard document summary queries in `ContosoDashboard/Services/DashboardService.cs` and `ContosoDashboard/Services/DocumentService.cs`
+- [X] T045 [P] [US7] Add dashboard document summary queries in `ContosoDashboard/Services/DashboardService.cs` and `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T046 [P] [US7] Add task attachment queries and commands in `ContosoDashboard/Services/TaskService.cs` and `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T047 [P] [US7] Add admin activity filtering/query support in `ContosoDashboard/Services/DocumentActivityService.cs` and `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T048 [US7] Update the dashboard UI in `ContosoDashboard/Pages/Index.razor`

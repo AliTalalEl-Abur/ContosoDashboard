@@ -1,0 +1,133 @@
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject Microsoft.Extensions.Options.IOptions<DocumentStorageOptions> StorageOptions
+
+@if (Document != null)
+{
+    <div class="card border-secondary mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Edit Document</h5>
+            <button type="button" class="btn-close" @onclick="OnCancelAsync"></button>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <InputText class="form-control" @bind-Value="title" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" @bind="category">
+                    @foreach (var item in DocumentCategories.All)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <InputTextArea class="form-control" @bind-Value="description" rows="3" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tags</label>
+                <InputText class="form-control" @bind-Value="tags" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Replace file (optional)</label>
+                <InputFile OnChange="HandleFileSelected" class="form-control" />
+                @if (selectedFileName is not null)
+                {
+                    <small class="text-muted">New file: @selectedFileName</small>
+                }
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="OnCancelAsync">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DocumentListItem? Document { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public EventCallback OnCancelled { get; set; }
+
+    private string title = string.Empty;
+    private string category = DocumentCategories.Other;
+    private string? description;
+    private string? tags;
+    private string? errorMessage;
+    private IBrowserFile? selectedFile;
+    private string? selectedFileName;
+
+    protected override void OnParametersSet()
+    {
+        title = Document?.Title ?? string.Empty;
+        category = Document?.Category ?? DocumentCategories.Other;
+        description = Document?.Description;
+        tags = Document?.Tags;
+        errorMessage = null;
+        selectedFile = null;
+        selectedFileName = null;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+        selectedFileName = args.File.Name;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Document == null)
+        {
+            return;
+        }
+
+        if (!int.TryParse((await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            return;
+        }
+
+        var success = await DocumentService.UpdateMetadataAsync(Document.DocumentId, userId, new UpdateDocumentRequest
+        {
+            Title = title,
+            Category = category,
+            Description = description,
+            Tags = tags
+        });
+
+        if (!success)
+        {
+            errorMessage = "The document could not be updated.";
+            return;
+        }
+
+        if (selectedFile != null)
+        {
+            await using var stream = selectedFile.OpenReadStream(StorageOptions.Value.MaxFileSizeBytes);
+            success = await DocumentService.ReplaceFileAsync(Document.DocumentId, new ReplaceDocumentRequest
+            {
+                RequestingUserId = userId,
+                OriginalFileName = selectedFile.Name,
+                ContentType = selectedFile.ContentType,
+                FileSizeBytes = selectedFile.Size
+            }, stream);
+
+            if (!success)
+            {
+                errorMessage = "The replacement file could not be saved.";
+                return;
+            }
+        }
+
+        await OnSaved.InvokeAsync();
+    }
+
+    private Task OnCancelAsync() => OnCancelled.InvokeAsync();
+}

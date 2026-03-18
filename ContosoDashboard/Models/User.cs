@@ -48,6 +48,11 @@ public class User
     public virtual ICollection<ProjectMember> ProjectMemberships { get; set; } = new List<ProjectMember>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public virtual ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
+    public virtual ICollection<Document> UploadedDocuments { get; set; } = new List<Document>();
+    public virtual ICollection<Document> DeletedDocuments { get; set; } = new List<Document>();
+    public virtual ICollection<DocumentShare> DocumentSharesSent { get; set; } = new List<DocumentShare>();
+    public virtual ICollection<DocumentShare> DocumentSharesReceived { get; set; } = new List<DocumentShare>();
+    public virtual ICollection<DocumentActivity> DocumentActivities { get; set; } = new List<DocumentActivity>();
 }
 
 public enum UserRole

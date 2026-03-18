@@ -1,0 +1,119 @@
+@inject IDocumentService DocumentService
+@inject IUserService UserService
+@inject IProjectService ProjectService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (Document != null)
+{
+    <div class="card border-info mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Share Document</h5>
+            <button type="button" class="btn-close" @onclick="OnCancelAsync"></button>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <div class="mb-3">
+                <label class="form-label">Share with user</label>
+                <select class="form-select" @bind="selectedUserId">
+                    <option value="">Select a user</option>
+                    @foreach (var user in users)
+                    {
+                        <option value="@user.UserId">@user.DisplayName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Or share with project</label>
+                <select class="form-select" @bind="selectedProjectId">
+                    <option value="">Select a project</option>
+                    @foreach (var project in projects)
+                    {
+                        <option value="@project.ProjectId">@project.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Message</label>
+                <InputTextArea class="form-control" @bind-Value="message" rows="2" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-info text-white" @onclick="ShareAsync">Share</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="OnCancelAsync">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DocumentListItem? Document { get; set; }
+    [Parameter] public EventCallback OnShared { get; set; }
+    [Parameter] public EventCallback OnCancelled { get; set; }
+
+    private List<User> users = new();
+    private List<Project> projects = new();
+    private int? selectedUserId;
+    private int? selectedProjectId;
+    private string? message;
+    private string? errorMessage;
+    private int currentUserId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        errorMessage = null;
+        selectedUserId = null;
+        selectedProjectId = null;
+        message = null;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (int.TryParse(authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            currentUserId = userId;
+            users = (await UserService.GetAllUsersAsync()).Where(u => u.UserId != userId).ToList();
+            projects = await ProjectService.GetUserProjectsAsync(userId);
+        }
+    }
+
+    private async Task ShareAsync()
+    {
+        if (Document == null)
+        {
+            return;
+        }
+
+        if (!selectedUserId.HasValue && !selectedProjectId.HasValue)
+        {
+            errorMessage = "Select at least one recipient.";
+            return;
+        }
+
+        var request = new DocumentShareRequest
+        {
+            RequestingUserId = currentUserId,
+            Message = message,
+            ProjectId = selectedProjectId
+        };
+
+        if (selectedUserId.HasValue)
+        {
+            request.UserIds.Add(selectedUserId.Value);
+        }
+
+        var success = await DocumentService.ShareDocumentAsync(Document.DocumentId, request);
+        if (!success)
+        {
+            errorMessage = "The document could not be shared.";
+            return;
+        }
+
+        await OnShared.InvokeAsync();
+    }
+
+    private Task OnCancelAsync() => OnCancelled.InvokeAsync();
+}

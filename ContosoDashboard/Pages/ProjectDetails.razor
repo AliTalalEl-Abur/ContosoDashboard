@@ -5,6 +5,7 @@
 @using System.Security.Claims
 @attribute [Authorize]
 @inject IProjectService ProjectService
+@inject IDocumentService DocumentService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -151,6 +152,22 @@
                         }
                     </div>
                 </div>
+
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Project Documents</h5>
+                        <span class="badge bg-secondary">@projectDocuments.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (canManageProjectDocuments)
+                        {
+                            <DocumentUploadForm FixedProjectId="@ProjectId" UploadCompleted="RefreshProjectDocuments" ButtonLabel="Upload to project" />
+                            <hr />
+                        }
+
+                        <DocumentList Documents="projectDocuments" EmptyMessage="No documents linked to this project yet." />
+                    </div>
+                </div>
             </div>
 
             <div class="col-md-4">
@@ -238,6 +255,9 @@
 
     private Project? project;
     private int currentUserId = 0;
+    private string currentUserRole = string.Empty;
+    private List<DocumentListItem> projectDocuments = new();
+    private bool canManageProjectDocuments;
 
     protected override async Task OnInitializedAsync()
     {
@@ -245,6 +265,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        currentUserRole = user.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
         {
             currentUserId = userId;
@@ -253,12 +274,22 @@
         if (currentUserId > 0)
         {
             project = await ProjectService.GetProjectByIdAsync(ProjectId, currentUserId);
+            projectDocuments = await DocumentService.GetProjectDocumentsAsync(ProjectId, currentUserId);
         }
         
         if (project == null)
         {
             NavigationManager.NavigateTo("/projects");
+            return;
         }
+
+        canManageProjectDocuments = project.ProjectManagerId == currentUserId || currentUserRole == nameof(UserRole.Administrator);
+    }
+
+    private async Task RefreshProjectDocuments()
+    {
+        projectDocuments = await DocumentService.GetProjectDocumentsAsync(ProjectId, currentUserId);
+        StateHasChanged();
     }
 
     private string GetStatusColor(ProjectStatus status)

@@ -1,0 +1,67 @@
+@page "/documents/activity"
+@using ModelDocumentActivity = ContosoDashboard.Models.DocumentActivity
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "Administrator")]
+@inject IDocumentActivityService DocumentActivityService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Document Activity - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Document Activity</h1>
+            <p class="text-muted mb-0">Administrator audit trail for document events.</p>
+        </div>
+    </div>
+
+    @if (activities == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!activities.Any())
+    {
+        <div class="alert alert-info">No activity has been recorded yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Action</th>
+                        <th>Document</th>
+                        <th>Actor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var activity in activities)
+                    {
+                        <tr>
+                            <td>@activity.OccurredAtUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                            <td><span class="badge bg-secondary">@activity.ActionType</span></td>
+                            <td>@activity.Document.Title</td>
+                            <td>@activity.ActorUser.DisplayName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ModelDocumentActivity>? activities;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!int.TryParse(authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            return;
+        }
+
+        activities = await DocumentActivityService.GetActivityAsync(userId);
+    }
+}
