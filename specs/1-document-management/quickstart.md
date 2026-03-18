@@ -60,3 +60,34 @@ This guide validates the feature manually in the local training environment.
 - Files must be stored outside `wwwroot`.
 - Stored path should be GUID-based and relative.
 - If DB write fails after file save, cleanup logic should remove orphan file.
+
+## Execution Log (2026-03-18)
+
+Environment
+- App URL: `http://localhost:5055`
+- Connection string override: `ContosoDashboard_DocValidation`
+- Seed users used: Admin (`UserId=1`), Employee (`UserId=4`)
+
+Validated checks (session + cookie flow via `/login`)
+- Dashboard renders document summary card (`Documents`) and `Recent Documents` section for authenticated employee.
+- Tasks page loads for authenticated employee and renders attachment action (`bi bi-paperclip`) indicating task-document integration entry point.
+- Admin can open `/documents/activity` and sees `Document Activity` heading plus filters (`Action`, `Actor User ID`, `Document ID`, `Apply`).
+- Employee access to `/documents/activity` is denied (authorization boundary enforced; no admin heading rendered).
+
+Validation output snapshot
+```json
+{
+   "DashboardDocumentsCard": true,
+   "DashboardRecentDocuments": true,
+   "TasksRouteLoads": true,
+   "TasksHasAttachmentAction": true,
+   "AdminActivityLoads": true,
+   "AdminActivityHasFilters": true,
+   "EmployeeDeniedFromAdminActivity": true,
+   "CheckedAtUtc": "2026-03-18 22:14:39Z"
+}
+```
+
+Scope note
+- This run covers US7 integration visibility and authorization/UX consistency checks needed for T052 and T056.
+- Full end-to-end re-run for all stories (including upload/share/lifecycle interaction sequence) remains tracked by T055.
