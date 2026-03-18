@@ -67,20 +67,11 @@
 
 ### Edge Cases
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+- What happens when an authenticated user attempts an action outside their role, project membership, or document ownership?
+- How does the system behave when offline storage, database persistence, or another local dependency fails partway through the workflow?
+- What happens when validation fails for size limits, required metadata, unsupported input, or conflicting state changes?
 
 ## Requirements *(mandatory)*
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
 
 ### Functional Requirements
 
@@ -94,6 +85,18 @@
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+
+### Security and Access Rules *(mandatory)*
+
+- Define which roles can view, create, update, delete, download, or share the feature's data.
+- State the service-layer authorization checks that prevent insecure direct object reference or cross-user data leakage.
+- Identify any audit, notification, or security-header implications introduced by the feature.
+
+### Operational Constraints & Migration Notes *(mandatory)*
+
+- State how the feature works in the repository's offline-first training environment.
+- If the feature introduces storage, external integration, or background processing, define the interface abstraction that preserves a future cloud migration path.
+- Record any explicit non-goals or production-only follow-up work that is intentionally out of scope for the training implementation.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -113,3 +116,8 @@
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+
+## Verification Evidence *(mandatory)*
+
+- **Automated Verification**: [List automated tests to add, or state why none are practical for this slice yet]
+- **Manual Verification**: [List reproducible steps that validate the primary flow, authorization boundaries, and failure handling]
